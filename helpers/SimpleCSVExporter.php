@@ -1,6 +1,6 @@
 <?php
 
-class SimpleCSVExport_View_Helper_ItemCSV extends Zend_View_Helper_Abstract
+class SimpleCSVExporter
 {
   public function __construct()
   {
@@ -17,10 +17,54 @@ class SimpleCSVExport_View_Helper_ItemCSV extends Zend_View_Helper_Abstract
    */
   public function exportItem($itemID)
   {
-    ob_start();
-    $this->itemCSV($itemID, false);
+	  ob_start();
+    print($this->csvHeader($itemID)."\n");
+	  print_r($this->array2string($this->itemCSV($itemID, false)));
+
     return ob_get_clean();
   }
+
+  private function _getElements($set){
+    $elementSet= get_record('ElementSet',array('name'=>"$set"));
+    $elements=array();
+    foreach ($elementSet->getElements() as $element){
+      $elements[]=$element->name;
+    }  
+    return $elements;  
+  }  
+
+
+  public function array2string($data){
+	  $log_a = "";
+	  foreach($data as $key => $value){
+		  if (is_array($value)){
+			  $log_a .= $this->array2string($value);
+		  }else{
+			  $log_a .= $value . ",";
+		  }
+	  }
+	  return $log_a;
+  }
+
+
+  /**
+   * Returns the header of a given single Omeka item
+   *
+   */
+  public function csvHeader($itemID)
+  {
+    //Headers
+    $omeka = ['Omeka ID','Omeka URL'];
+    $dc = $this->_getElements('Dublin Core');
+    $it = $this->_getElements('Item Type Metadata');	
+    $files = ['Files'];
+    $tags = ['Tags'];
+
+    $headers = array(array_merge($omeka,$dc,$it,$files,$tags));
+    $string = $this->array2string($headers);
+    return $string;
+  }
+
 
   public function itemCSV( $item, $isExtended = false )
   {  
