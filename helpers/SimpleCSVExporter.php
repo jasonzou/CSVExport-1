@@ -15,20 +15,24 @@ class SimpleCSVExporter
    *            The ID of the Omeka item
    * @return string $csv The contents of the CSV file
    */
-  public function exportItem($itemID)
+  public function exportItem($item)
   {
 	  ob_start();
-    print($this->csvHeader($itemID)."\n");
-	  print_r($this->array2string($this->itemCSV($itemID, false)));
+	  //print_r($this->itemCSV($itemID, false));
+	  print_r($this->array2string($this->itemCSV($item, false)));
 
     return ob_get_clean();
   }
 
   private function _getElements($set){
+	  $NS = "";
+	  if ($set == "Dublin Core"){
+		  $NS = "dc.";
+	  }
     $elementSet= get_record('ElementSet',array('name'=>"$set"));
     $elements=array();
     foreach ($elementSet->getElements() as $element){
-      $elements[]=$element->name;
+      $elements[]= $NS . strtolower($element->name);
     }  
     return $elements;  
   }  
@@ -54,14 +58,14 @@ class SimpleCSVExporter
   public function csvHeader($itemID)
   {
     //Headers
-    $omeka = ['Omeka ID','Omeka URL'];
+    $omeka = ['filename'];
     $dc = $this->_getElements('Dublin Core');
     $it = $this->_getElements('Item Type Metadata');	
     $files = ['Files'];
     $tags = ['Tags'];
 
     $headers = array(array_merge($omeka,$dc,$it,$files,$tags));
-    $string = $this->array2string($headers);
+    $string = $this->array2string($headers) . "\r\n";
     return $string;
   }
 
@@ -70,11 +74,10 @@ class SimpleCSVExporter
   {  
     
     $itemMetadata = array(
-      0   => $item->id,
-      1  => WEB_ROOT.'/items/show/'.$item->id,
+      0  => WEB_ROOT.'/items/show/'.$item->id,
     );    
     
-    $i=2;
+    $i=1;
     
     /* Dublin Core metadata */
     foreach(SimpleCSVExportPlugin::getElements('Dublin Core') as $element){

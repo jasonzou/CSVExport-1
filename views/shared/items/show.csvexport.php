@@ -22,7 +22,8 @@ if (! isset($itemID)) {
     header('Content-Disposition: attachment; filename="Item_' . $itemID . '.csv"');
     
     try {
-        echo $simpleCSVExporter->exportItem($itemID);
+	echo $simpleCSVExporter->csvHeader($itemID);    
+        echo $simpleCSVExporter->exportItem($item);
     } catch (Exception $e) {
         $flashMessenger->addMessage($e->getMessage(), 'error');
     }
